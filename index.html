@@ -12,7 +12,7 @@
     <style>
       button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2rem; }
       * { box-sizing: border-box; }
-      html, body { margin: 0; padding: 0; }
+      html, body { margin: 0; padding: 0; overflow-x: clip; max-width: 100%; }
       :root{
         --page-bg:#0d1712;
         --page-bg2:#12241b;
@@ -76,17 +76,18 @@
         min-height:100dvh;
       }
       .layout{
-        max-width:1180px; margin:0 auto; padding:28px 20px 36px;
-        display:grid; grid-template-columns:400px minmax(0,430px); gap:44px;
+        width:100%; max-width:1180px; margin:0 auto; padding:28px 20px 36px;
+        display:grid; grid-template-columns:minmax(0,400px) minmax(0,430px); gap:44px;
         align-items:start; justify-content:center;
       }
       /* ---------- Presenter panel ---------- */
-      .panel{ display:flex; flex-direction:column; gap:18px; padding-top:8px; }
+      .panel{ display:flex; flex-direction:column; gap:18px; padding-top:8px; min-width:0; width:100%; }
       .live-badge{
         display:inline-flex; align-items:center; gap:8px; align-self:flex-start;
         background:rgba(37,211,102,.12); border:1px solid rgba(37,211,102,.35);
         color:var(--panel-text); font-size:13px; font-weight:600;
         padding:6px 12px; border-radius:999px;
+        max-width:100%; flex-wrap:wrap; white-space:normal; line-height:1.5;
       }
       .live-dot{ width:8px; height:8px; border-radius:50%; background:var(--accent); animation:pulse 1.6s infinite; }
       #brainBadge b{ color:var(--gold); }
@@ -99,7 +100,8 @@
         background:var(--panel-bg); border:1px solid var(--panel-border);
         border-radius:14px; padding:18px 18px 14px; backdrop-filter:blur(6px);
       }
-      .card h2{ margin:0 0 12px; font-size:16px; font-weight:700; display:flex; align-items:center; justify-content:space-between; gap:10px;}
+      .card h2{ margin:0 0 12px; font-size:16px; font-weight:700; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; min-width:0; }
+      .card{ min-width:0; width:100%; }
       .status-pill{
         font-size:12px; font-weight:600; padding:4px 10px; border-radius:999px;
         background:rgba(240,199,94,.15); color:var(--gold); border:1px solid rgba(240,199,94,.35);
@@ -112,7 +114,7 @@
       }
       .sum-row:last-child{ border-bottom:none; }
       .sum-row .k{ color:var(--panel-muted); flex-shrink:0; }
-      .sum-row .v{ font-weight:600; text-align:left; }
+      .sum-row .v{ font-weight:600; text-align:left; min-width:0; overflow-wrap:anywhere; }
       .sum-row .v.empty{ color:var(--panel-muted); font-weight:400; }
       .steps{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:0; }
       .steps li{
@@ -133,7 +135,7 @@
       .cheat .row{ display:flex; justify-content:space-between; gap:12px; border-bottom:1px dashed var(--panel-border); padding:4px 0;}
       .cheat .row:last-child{ border-bottom:none; }
       .cheat .row span:first-child{ color:var(--panel-muted); }
-      .cheat .row span:last-child{ font-weight:600; }
+      .cheat .row span:last-child{ font-weight:600; min-width:0; overflow-wrap:anywhere; text-align:left; }
       .reset-btn{
         appearance:none; border:1px solid rgba(37,211,102,.5); cursor:pointer;
         background:rgba(37,211,102,.12); color:var(--panel-text);
@@ -144,14 +146,14 @@
       .reset-btn:active{ transform:scale(.98); }
       .panel .hint{ font-size:13px; color:var(--panel-muted); line-height:1.8; margin:0; }
       /* ---------- Phone ---------- */
-      .phone-wrap{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+      .phone-wrap{ display:flex; flex-direction:column; align-items:center; gap:14px; min-width:0; width:100%; }
       .phone{
-        width:min(410px, 100%); height:min(830px, calc(100dvh - 64px)); min-height:560px;
+        width:100%; max-width:410px; height:min(830px, calc(100dvh - 64px)); min-height:560px;
         background:#000; border-radius:46px; padding:11px;
         box-shadow:0 30px 70px rgba(0,0,0,.45), 0 0 0 2px #2b2b2b;
       }
       .screen{
-        height:100%; border-radius:36px; overflow:hidden; display:flex; flex-direction:column;
+        height:100%; width:100%; min-width:0; border-radius:36px; overflow:hidden; display:flex; flex-direction:column;
         background:var(--wa-wall); position:relative;
       }
       .notch{
@@ -176,7 +178,7 @@
       .wa-header .who{ flex:1; min-width:0; }
       .wa-header .name{ font-size:16.5px; font-weight:600; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
       .wa-header .stat{ font-size:12.5px; opacity:.85; line-height:1.3; }
-      .wa-header .hicon{ opacity:.95; display:grid; place-items:center; width:36px; height:36px; }
+      .wa-header .hicon{ opacity:.95; display:grid; place-items:center; width:36px; height:36px; flex-shrink:0; }
       .chat{
         flex:1; overflow-y:auto; padding:12px 12px 8px;
         display:flex; flex-direction:column; gap:3px;
@@ -196,9 +198,9 @@
       .sys-chip.lock{ background:var(--wa-notice); color:var(--wa-notice-text); box-shadow:0 1px 1px rgba(0,0,0,.1); }
       .sys-chip.guide{ background:transparent; color:var(--wa-meta); font-size:12.5px; }
       .msg{
-        max-width:78%; padding:7px 9px 5px; border-radius:8px; font-size:15px; line-height:1.65;
+        max-width:82%; padding:7px 9px 5px; border-radius:8px; font-size:15px; line-height:1.65;
         color:var(--wa-text); position:relative; box-shadow:0 1px 1px rgba(0,0,0,.13);
-        white-space:pre-wrap; word-wrap:break-word; margin-top:2px;
+        white-space:pre-wrap; overflow-wrap:anywhere; word-wrap:break-word; margin-top:2px;
       }
       .msg .meta{ float:left; margin:10px 0 0 6px; display:inline-flex; align-items:center; gap:3px; font-size:11px; color:var(--wa-meta); direction:ltr; }
       .msg.agent{ background:var(--wa-in); align-self:flex-start; border-top-right-radius:0; }
@@ -217,12 +219,14 @@
       /* chips */
       .chips{
         display:flex; flex-wrap:wrap; gap:8px; padding:10px 12px 4px; background:transparent;
+        width:100%; min-width:0;
       }
       .chip{
         appearance:none; cursor:pointer; font-family:inherit; font-size:14px; font-weight:500;
         background:var(--wa-chip-bg); color:var(--accent-dark); border:1.5px solid var(--accent-dark);
         padding:8px 14px; border-radius:999px; min-height:38px; line-height:1.4;
         box-shadow:0 1px 2px rgba(0,0,0,.08);
+        max-width:100%; white-space:normal; text-align:center; overflow-wrap:anywhere;
       }
       @media (prefers-color-scheme: dark){ .chip{ color:var(--accent); border-color:var(--accent); } }
       .chip:active{ transform:scale(.97); }
@@ -231,13 +235,14 @@
       /* input bar */
       .inputbar{
         display:flex; align-items:flex-end; gap:8px; padding:8px 10px 12px;
+        width:100%; min-width:0;
       }
       .inputbox{
-        flex:1; background:var(--wa-in); border-radius:24px; display:flex; align-items:center;
+        flex:1 1 auto; min-width:0; background:var(--wa-in); border-radius:24px; display:flex; align-items:center;
         padding:4px 14px; box-shadow:0 1px 2px rgba(0,0,0,.12); min-height:48px;
       }
       .inputbox input{
-        flex:1; border:none; outline:none; background:transparent; font-family:inherit;
+        flex:1; width:100%; min-width:0; border:none; outline:none; background:transparent; font-family:inherit;
         font-size:15.5px; color:var(--wa-text); min-height:40px;
       }
       .inputbox input::placeholder{ color:var(--wa-meta); }
@@ -252,14 +257,51 @@
         background:transparent; color:var(--panel-text); border:1px solid var(--panel-border);
         padding:10px 20px; border-radius:999px; min-height:44px;
         display:inline-flex; align-items:center; gap:8px;
+        max-width:100%; white-space:normal; text-align:center;
       }
+      .reset-btn{ max-width:100%; white-space:normal; text-align:center; }
       @media (max-width:900px){
-        .layout{ grid-template-columns:1fr; padding:14px 12px 28px; gap:22px; }
+        .layout{ grid-template-columns:minmax(0,1fr); padding:14px 12px 28px; gap:22px; }
         .panel{ order:2; padding-top:0; }
+        .phone-wrap{ order:1; }
         .panel h1{ font-size:24px; }
         .phone{ height:min(760px, calc(100dvh - 90px)); border-radius:38px; padding:8px; }
         .screen{ border-radius:31px; }
         .notch{ width:92px; height:20px; }
+      }
+      @media (max-width:480px){
+        .layout{ padding:10px 8px 24px; gap:18px; }
+        .phone{ height:min(700px, calc(100dvh - 70px)); min-height:500px; border-radius:32px; padding:6px; box-shadow:0 18px 44px rgba(0,0,0,.4), 0 0 0 2px #2b2b2b; }
+        .screen{ border-radius:27px; }
+        .notch{ width:80px; height:18px; top:6px; }
+        .statusbar{ padding:7px 14px 2px; font-size:11.5px; }
+        .wa-header{ gap:6px; padding:7px 8px 9px; }
+        .wa-header .avatar{ width:36px; height:36px; }
+        .wa-header .name{ font-size:15px; }
+        .wa-header .stat{ font-size:11.5px; }
+        .wa-header .hicon{ width:30px; height:30px; }
+        .chat{ padding:10px 8px 6px; }
+        .msg{ font-size:14.5px; max-width:85%; }
+        .chips{ padding:8px 8px 2px; gap:6px; }
+        .chip{ font-size:13.5px; padding:7px 11px; min-height:36px; }
+        .inputbar{ padding:7px 7px 10px; gap:6px; }
+        .inputbox{ padding:4px 11px; min-height:46px; }
+        .inputbox input{ font-size:15px; }
+        .sendbtn{ width:46px; height:46px; }
+        .panel{ gap:14px; }
+        .panel h1{ font-size:22px; line-height:1.4; }
+        .panel .sub{ font-size:14.5px; }
+        .card{ padding:15px 14px 11px; border-radius:12px; }
+        .live-badge{ font-size:12.5px; padding:6px 10px; }
+      }
+      @media (max-width:380px){
+        .layout{ padding:8px 6px 20px; }
+        .phone{ min-height:480px; border-radius:28px; padding:5px; }
+        .screen{ border-radius:24px; }
+        .notch{ width:70px; height:16px; }
+        .wa-header .name{ font-size:14px; }
+        .chip{ font-size:13px; padding:6px 10px; }
+        .msg{ font-size:14px; }
       }
       @media (prefers-reduced-motion: reduce){
         .typing i, .live-dot{ animation:none; }
