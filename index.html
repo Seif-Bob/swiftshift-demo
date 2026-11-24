@@ -1,0 +1,979 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>WhatsApp Live Demo — موظف الحجز</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2rem; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      :root{
+        --page-bg:#0d1712;
+        --page-bg2:#12241b;
+        --panel-bg:rgba(255,255,255,.045);
+        --panel-border:rgba(255,255,255,.09);
+        --panel-text:#eef5f0;
+        --panel-muted:#9db8a8;
+        --accent:#25d366;
+        --accent-dark:#128c7e;
+        --gold:#f0c75e;
+        /* WhatsApp (light) */
+        --wa-header:#075e54;
+        --wa-header-text:#ffffff;
+        --wa-wall:#ece5dd;
+        --wa-in:#ffffff;
+        --wa-out:#dcf8c6;
+        --wa-text:#111b21;
+        --wa-meta:#667781;
+        --wa-bar:#f0f0f0;
+        --wa-chip-bg:#ffffff;
+        --wa-chip-border:#cfd8d3;
+        --wa-notice:#fdf3c6;
+        --wa-notice-text:#54656f;
+        --wa-date-chip:#e1f3fb;
+        --wa-date-text:#3b4a54;
+      }
+      @media (prefers-color-scheme: light){
+        :root{
+          --page-bg:#e7efe9;
+          --page-bg2:#d8e8dc;
+          --panel-bg:rgba(255,255,255,.72);
+          --panel-border:rgba(7,94,84,.14);
+          --panel-text:#122019;
+          --panel-muted:#4c6355;
+        }
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --wa-header:#1f2c34;
+          --wa-wall:#0b141a;
+          --wa-in:#1f2c34;
+          --wa-out:#005c4b;
+          --wa-text:#e9edef;
+          --wa-meta:#8696a0;
+          --wa-bar:#1f2c34;
+          --wa-chip-bg:#1f2c34;
+          --wa-chip-border:#2a3942;
+          --wa-notice:#182229;
+          --wa-notice-text:#ffd279;
+          --wa-date-chip:#182229;
+          --wa-date-text:#8696a0;
+        }
+      }
+      body{
+        font-family:"IBM Plex Sans Arabic", system-ui, -apple-system, "Segoe UI", sans-serif;
+        background:
+          radial-gradient(900px 500px at 85% -10%, rgba(37,211,102,.14), transparent 60%),
+          radial-gradient(700px 500px at 0% 110%, rgba(18,140,126,.16), transparent 60%),
+          linear-gradient(160deg, var(--page-bg), var(--page-bg2));
+        color:var(--panel-text);
+        min-height:100dvh;
+      }
+      .layout{
+        max-width:1180px; margin:0 auto; padding:28px 20px 36px;
+        display:grid; grid-template-columns:400px minmax(0,430px); gap:44px;
+        align-items:start; justify-content:center;
+      }
+      /* ---------- Presenter panel ---------- */
+      .panel{ display:flex; flex-direction:column; gap:18px; padding-top:8px; }
+      .live-badge{
+        display:inline-flex; align-items:center; gap:8px; align-self:flex-start;
+        background:rgba(37,211,102,.12); border:1px solid rgba(37,211,102,.35);
+        color:var(--panel-text); font-size:13px; font-weight:600;
+        padding:6px 12px; border-radius:999px;
+      }
+      .live-dot{ width:8px; height:8px; border-radius:50%; background:var(--accent); animation:pulse 1.6s infinite; }
+      #brainBadge b{ color:var(--gold); }
+      #brainBadge.smart b{ color:var(--accent); }
+      @keyframes pulse{ 0%{box-shadow:0 0 0 0 rgba(37,211,102,.5)} 70%{box-shadow:0 0 0 8px rgba(37,211,102,0)} 100%{box-shadow:0 0 0 0 rgba(37,211,102,0)} }
+      .panel h1{ font-size:30px; line-height:1.35; margin:0; font-weight:700; }
+      .panel h1 .hl{ color:var(--accent); }
+      .panel .sub{ margin:0; color:var(--panel-muted); font-size:15.5px; line-height:1.8; }
+      .card{
+        background:var(--panel-bg); border:1px solid var(--panel-border);
+        border-radius:14px; padding:18px 18px 14px; backdrop-filter:blur(6px);
+      }
+      .card h2{ margin:0 0 12px; font-size:16px; font-weight:700; display:flex; align-items:center; justify-content:space-between; gap:10px;}
+      .status-pill{
+        font-size:12px; font-weight:600; padding:4px 10px; border-radius:999px;
+        background:rgba(240,199,94,.15); color:var(--gold); border:1px solid rgba(240,199,94,.35);
+        white-space:nowrap;
+      }
+      .status-pill.done{ background:rgba(37,211,102,.15); color:var(--accent); border-color:rgba(37,211,102,.4); }
+      .sum-row{
+        display:flex; justify-content:space-between; gap:14px;
+        padding:8px 0; border-bottom:1px dashed var(--panel-border); font-size:14.5px;
+      }
+      .sum-row:last-child{ border-bottom:none; }
+      .sum-row .k{ color:var(--panel-muted); flex-shrink:0; }
+      .sum-row .v{ font-weight:600; text-align:left; }
+      .sum-row .v.empty{ color:var(--panel-muted); font-weight:400; }
+      .steps{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:0; }
+      .steps li{
+        display:flex; gap:12px; align-items:flex-start; padding:9px 0; font-size:14.5px; color:var(--panel-muted);
+      }
+      .steps .n{
+        width:26px; height:26px; border-radius:50%; flex-shrink:0;
+        border:1.5px solid var(--panel-border); display:grid; place-items:center;
+        font-size:13px; font-weight:700; color:var(--panel-muted); margin-top:1px;
+        background:transparent;
+      }
+      .steps li.active{ color:var(--panel-text); font-weight:600; }
+      .steps li.active .n{ border-color:var(--accent); color:#06281a; background:var(--accent); }
+      .steps li.done{ color:var(--panel-text); }
+      .steps li.done .n{ border-color:var(--accent); color:var(--accent); background:rgba(37,211,102,.1); }
+      .steps small{ display:block; font-weight:400; color:var(--panel-muted); font-size:12.5px; margin-top:2px; line-height:1.6;}
+      .cheat{ font-size:14px; line-height:2; color:var(--panel-text); }
+      .cheat .row{ display:flex; justify-content:space-between; gap:12px; border-bottom:1px dashed var(--panel-border); padding:4px 0;}
+      .cheat .row:last-child{ border-bottom:none; }
+      .cheat .row span:first-child{ color:var(--panel-muted); }
+      .cheat .row span:last-child{ font-weight:600; }
+      .reset-btn{
+        appearance:none; border:1px solid rgba(37,211,102,.5); cursor:pointer;
+        background:rgba(37,211,102,.12); color:var(--panel-text);
+        font-family:inherit; font-size:15px; font-weight:700;
+        padding:12px 18px; border-radius:12px; min-height:48px;
+        display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      }
+      .reset-btn:active{ transform:scale(.98); }
+      .panel .hint{ font-size:13px; color:var(--panel-muted); line-height:1.8; margin:0; }
+      /* ---------- Phone ---------- */
+      .phone-wrap{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+      .phone{
+        width:min(410px, 100%); height:min(830px, calc(100dvh - 64px)); min-height:560px;
+        background:#000; border-radius:46px; padding:11px;
+        box-shadow:0 30px 70px rgba(0,0,0,.45), 0 0 0 2px #2b2b2b;
+      }
+      .screen{
+        height:100%; border-radius:36px; overflow:hidden; display:flex; flex-direction:column;
+        background:var(--wa-wall); position:relative;
+      }
+      .notch{
+        position:absolute; top:8px; left:50%; transform:translateX(-50%);
+        width:110px; height:24px; background:#000; border-radius:14px; z-index:30;
+      }
+      .statusbar{
+        background:var(--wa-header); color:var(--wa-header-text);
+        display:flex; justify-content:space-between; align-items:center;
+        padding:8px 22px 2px; font-size:12.5px; font-weight:600; direction:ltr;
+      }
+      .statusbar .icons{ display:flex; gap:6px; align-items:center; }
+      .wa-header{
+        background:var(--wa-header); color:var(--wa-header-text);
+        display:flex; align-items:center; gap:10px; padding:8px 12px 10px;
+        box-shadow:0 1px 3px rgba(0,0,0,.25); z-index:5;
+      }
+      .wa-header .avatar{
+        width:40px; height:40px; border-radius:50%; flex-shrink:0;
+        background:#dfe9e4; display:grid; place-items:center;
+      }
+      .wa-header .who{ flex:1; min-width:0; }
+      .wa-header .name{ font-size:16.5px; font-weight:600; line-height:1.25; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .wa-header .stat{ font-size:12.5px; opacity:.85; line-height:1.3; }
+      .wa-header .hicon{ opacity:.95; display:grid; place-items:center; width:36px; height:36px; }
+      .chat{
+        flex:1; overflow-y:auto; padding:12px 12px 8px;
+        display:flex; flex-direction:column; gap:3px;
+        background-color:var(--wa-wall);
+        background-image:radial-gradient(rgba(0,0,0,.055) 1px, transparent 1.4px), radial-gradient(rgba(0,0,0,.04) 1px, transparent 1.4px);
+        background-size:22px 22px, 34px 34px; background-position:0 0, 11px 17px;
+        scrollbar-width:thin;
+      }
+      @media (prefers-color-scheme: dark){
+        .chat{ background-image:radial-gradient(rgba(255,255,255,.05) 1px, transparent 1.4px), radial-gradient(rgba(255,255,255,.035) 1px, transparent 1.4px); }
+      }
+      .sys-chip{
+        align-self:center; font-size:12px; padding:5px 12px; border-radius:8px;
+        margin:4px 0 8px; text-align:center; line-height:1.6; max-width:88%;
+      }
+      .sys-chip.date{ background:var(--wa-date-chip); color:var(--wa-date-text); font-weight:600; box-shadow:0 1px 1px rgba(0,0,0,.12); }
+      .sys-chip.lock{ background:var(--wa-notice); color:var(--wa-notice-text); box-shadow:0 1px 1px rgba(0,0,0,.1); }
+      .sys-chip.guide{ background:transparent; color:var(--wa-meta); font-size:12.5px; }
+      .msg{
+        max-width:78%; padding:7px 9px 5px; border-radius:8px; font-size:15px; line-height:1.65;
+        color:var(--wa-text); position:relative; box-shadow:0 1px 1px rgba(0,0,0,.13);
+        white-space:pre-wrap; word-wrap:break-word; margin-top:2px;
+      }
+      .msg .meta{ float:left; margin:10px 0 0 6px; display:inline-flex; align-items:center; gap:3px; font-size:11px; color:var(--wa-meta); direction:ltr; }
+      .msg.agent{ background:var(--wa-in); align-self:flex-start; border-top-right-radius:0; }
+      .msg.customer{ background:var(--wa-out); align-self:flex-end; border-top-left-radius:0; }
+      .msg .ticks{ color:#8696a0; font-size:11px; letter-spacing:-3px; margin-left:2px;}
+      .msg .ticks.read{ color:#53bdeb; }
+      .msg.confirm{ border:1.5px solid var(--accent-dark); }
+      .typing{
+        align-self:flex-start; background:var(--wa-in); border-radius:8px; border-top-right-radius:0;
+        padding:12px 14px; box-shadow:0 1px 1px rgba(0,0,0,.13); display:none; margin-top:2px;
+      }
+      .typing.show{ display:flex; gap:4px; }
+      .typing i{ width:8px; height:8px; border-radius:50%; background:#9aa7ad; animation:blink 1.2s infinite; }
+      .typing i:nth-child(2){ animation-delay:.2s } .typing i:nth-child(3){ animation-delay:.4s }
+      @keyframes blink{ 0%,80%,100%{ opacity:.3; transform:translateY(0)} 40%{ opacity:1; transform:translateY(-2px)} }
+      /* chips */
+      .chips{
+        display:flex; flex-wrap:wrap; gap:8px; padding:10px 12px 4px; background:transparent;
+      }
+      .chip{
+        appearance:none; cursor:pointer; font-family:inherit; font-size:14px; font-weight:500;
+        background:var(--wa-chip-bg); color:var(--accent-dark); border:1.5px solid var(--accent-dark);
+        padding:8px 14px; border-radius:999px; min-height:38px; line-height:1.4;
+        box-shadow:0 1px 2px rgba(0,0,0,.08);
+      }
+      @media (prefers-color-scheme: dark){ .chip{ color:var(--accent); border-color:var(--accent); } }
+      .chip:active{ transform:scale(.97); }
+      .chip.primary{ background:var(--accent-dark); color:#fff; border-color:var(--accent-dark); }
+      @media (prefers-color-scheme: dark){ .chip.primary{ background:var(--accent); color:#06281a; border-color:var(--accent);} }
+      /* input bar */
+      .inputbar{
+        display:flex; align-items:flex-end; gap:8px; padding:8px 10px 12px;
+      }
+      .inputbox{
+        flex:1; background:var(--wa-in); border-radius:24px; display:flex; align-items:center;
+        padding:4px 14px; box-shadow:0 1px 2px rgba(0,0,0,.12); min-height:48px;
+      }
+      .inputbox input{
+        flex:1; border:none; outline:none; background:transparent; font-family:inherit;
+        font-size:15.5px; color:var(--wa-text); min-height:40px;
+      }
+      .inputbox input::placeholder{ color:var(--wa-meta); }
+      .sendbtn{
+        width:48px; height:48px; border-radius:50%; border:none; cursor:pointer; flex-shrink:0;
+        background:#00a884; color:#fff; display:grid; place-items:center;
+        box-shadow:0 2px 5px rgba(0,0,0,.25);
+      }
+      .sendbtn:active{ transform:scale(.95); }
+      .phone-reset{
+        appearance:none; cursor:pointer; font-family:inherit; font-size:14px; font-weight:600;
+        background:transparent; color:var(--panel-text); border:1px solid var(--panel-border);
+        padding:10px 20px; border-radius:999px; min-height:44px;
+        display:inline-flex; align-items:center; gap:8px;
+      }
+      @media (max-width:900px){
+        .layout{ grid-template-columns:1fr; padding:14px 12px 28px; gap:22px; }
+        .panel{ order:2; padding-top:0; }
+        .panel h1{ font-size:24px; }
+        .phone{ height:min(760px, calc(100dvh - 90px)); border-radius:38px; padding:8px; }
+        .screen{ border-radius:31px; }
+        .notch{ width:92px; height:20px; }
+      }
+      @media (prefers-reduced-motion: reduce){
+        .typing i, .live-dot{ animation:none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <!-- ===== Presenter panel ===== -->
+      <aside class="panel">
+        <span class="live-badge"><span class="live-dot"></span> ديمو حي وتفاعلي — مش فيديو مسجل</span>
+        <span class="live-badge" id="brainBadge">مصدر آخر رد: <b id="brainState">لسه مفيش رد</b></span>
+        <h1>موظف حجز بيرد على <span class="hl">WhatsApp</span> ويحجز في ثواني</h1>
+        <p class="sub">جرّب بنفسك من الموبايل اللي جنبك: اكتب كأنك عميل عند عيادة أسنان، وشوف الموظف بيرد إزاي — بيفهم العميل، يجاوب على أسئلته، ويمشّيه ٣ أسئلة لحد ما يحجز. الاسم ورقم الموبايل بيتاخدوا في الآخر بس، بعد ما العميل يختار معاده.</p>
+
+        <div class="card">
+          <h2>ملخص الحجز — بيتملى لايف <span class="status-pill" id="statusPill">لسه مبدأش</span></h2>
+          <div class="sum-row"><span class="k">الخدمة</span><span class="v empty" id="sumService">—</span></div>
+          <div class="sum-row"><span class="k">الزيارة</span><span class="v empty" id="sumVisit">—</span></div>
+          <div class="sum-row"><span class="k">اليوم والمعاد</span><span class="v empty" id="sumWhen">—</span></div>
+          <div class="sum-row"><span class="k">الاسم</span><span class="v empty" id="sumName">—</span></div>
+          <div class="sum-row"><span class="k">الموبايل</span><span class="v empty" id="sumPhone">—</span></div>
+        </div>
+
+        <div class="card">
+          <h2>الموظف بيمشي إزاي؟</h2>
+          <ol class="steps">
+            <li id="step1"><span class="n">١</span><span>الخدمة أو المشكلة<small>أول رد دايمًا بيبدأ بفهم العميل والتعاطف معاه — ألم؟ خوف من التكلفة؟ — وبعدين السؤال.</small></span></li>
+            <li id="step2"><span class="n">٢</span><span>أول زيارة؟ وصباحًا ولا مساءً؟<small>سؤالين خفاف بيجهزوا اختيار المعاد الصح من أول مرة.</small></span></li>
+            <li id="step3"><span class="n">٣</span><span>اليوم والمعاد<small>الموظف يقترح معادين محددين جاهزين للاختيار بضغطة واحدة.</small></span></li>
+            <li id="step4"><span class="n">٤</span><span>الاسم والموبايل — في الآخر بس<small>العميل بيقرر الأول، وبعدين البيانات. كده نسبة إتمام الحجز أعلى بكتير.</small></span></li>
+          </ol>
+        </div>
+
+        <div class="card">
+          <h2>مرجع سريع — عيادات سمايل</h2>
+          <div class="cheat">
+            <div class="row"><span>كشف</span><span>300 جنيه</span></div>
+            <div class="row"><span>تنضيف وتلميع</span><span>800 جنيه</span></div>
+            <div class="row"><span>حشو تجميلي</span><span>1,200 جنيه</span></div>
+            <div class="row"><span>تقويم</span><span>يبدأ من 15,000 جنيه</span></div>
+            <div class="row"><span>زراعة</span><span>تبدأ من 9,000 جنيه</span></div>
+            <div class="row"><span>المواعيد</span><span>السبت–الخميس، 10ص – 10م</span></div>
+            <div class="row"><span>العنوان</span><span>مدينة نصر، القاهرة</span></div>
+          </div>
+        </div>
+
+        <button class="reset-btn" id="resetBtnPanel" type="button">↺ محادثة جديدة</button>
+        <p class="hint">نصيحة للعرض: اسأل سؤال بره الحجز في نص الكلام — زي «بكام التنضيف؟» أو «بتتعاملوا مع تأمين؟» — الموظف هيجاوب ويرجع بيك لنفس خطوة الحجز من غير ما يتلخبط. ولاحظ مؤشر «مصدر آخر رد» فوق: «الرد الذكي» يعني نموذج ذكاء اصطناعي صاغ الرد بنفسه، و«الرد الجاهز» يعني الرد الاحتياطي المكتوب اشتغل — الحجز نفسه ماشي بنفس الخطوات في الحالتين.</p>
+      </aside>
+
+      <!-- ===== Phone ===== -->
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="screen">
+            <div class="notch"></div>
+            <div class="statusbar">
+              <span id="clock">9:41</span>
+              <span class="icons">
+                <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg>
+                <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="20" height="11" rx="3" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="14" height="8" rx="1.6" fill="currentColor"/><path d="M23 4v4a2.2 2.2 0 0 0 0-4Z" fill="currentColor" opacity=".5"/></svg>
+              </span>
+            </div>
+            <div class="wa-header">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 5l7 7-7 7"/></svg>
+              <div class="avatar" aria-hidden="true">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#128c7e"><path d="M12 3C8.5 3 6 5.6 6 8.6c0 1.7.7 2.9 1.2 4.5.4 1.4.7 3.4 1 5.2.2 1.2.5 2.7 1.4 2.7 1 0 .9-1.7 1.4-3 .2-.6.5-.6.7 0 .5 1.3.4 3 1.4 3 .9 0 1.2-1.5 1.4-2.7.3-1.8.6-3.8 1-5.2.5-1.6 1.2-2.8 1.2-4.5C18 5.6 15.5 3 12 3Z"/></svg>
+              </div>
+              <div class="who">
+                <div class="name">عيادات سمايل لطب الأسنان</div>
+                <div class="stat" id="presence">online</div>
+              </div>
+              <span class="hicon"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4Z"/></svg></span>
+              <span class="hicon"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.3 0 .7-.2 1l-2.3 2.2Z"/></svg></span>
+            </div>
+
+            <div class="chat" id="chat"></div>
+
+            <div class="typing" id="typing"><i></i><i></i><i></i></div>
+
+            <div class="chips" id="chips"></div>
+
+            <form class="inputbar" id="inputForm">
+              <div class="inputbox">
+                <input id="textInput" type="text" placeholder="اكتب رسالة…" autocomplete="off" enterkeyhint="send" aria-label="اكتب رسالة كأنك عميل" />
+              </div>
+              <button class="sendbtn" id="sendBtn" type="submit" aria-label="إرسال">
+                <svg id="sendIcon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="transform:scaleX(-1)"><path d="M3.4 20.4 21.8 12 3.4 3.6l-.01 6.53L14 12 3.39 13.87l.01 6.53Z"/></svg>
+                <svg id="micIcon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3Zm7-3a7 7 0 0 1-13.7 1.6L7 14.2A5.5 5.5 0 0 0 11 16.9V20H7v2h10v-2h-4v-3.1a5.5 5.5 0 0 0 4-2.7l1.7-.6c-.2-.5-.3-1-.3-1.6Z" transform="translate(-.5 0)"/></svg>
+              </button>
+            </form>
+          </div>
+        </div>
+        <button class="phone-reset" id="resetBtnPhone" type="button">↺ محادثة جديدة</button>
+      </div>
+    </div>
+
+    <script>
+      // ================= State =================
+      var S;
+      function freshState(){
+        return { step:'service', service:null, serviceKey:null, pain:false,
+                 visit:null, period:null, dayLabel:null, dayDate:null,
+                 slots:[], slot:null, name:null, phone:null, done:false };
+      }
+      S = freshState();
+      var chatGen = 0;
+
+      var chat = document.getElementById('chat');
+      var chipsBox = document.getElementById('chips');
+      var typingEl = document.getElementById('typing');
+      var presence = document.getElementById('presence');
+      var input = document.getElementById('textInput');
+      var form = document.getElementById('inputForm');
+      var sendIcon = document.getElementById('sendIcon');
+      var micIcon = document.getElementById('micIcon');
+
+      function nowTime(){
+        try { return new Date().toLocaleTimeString('ar-EG',{hour:'numeric',minute:'2-digit'}); }
+        catch(e){ return new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}); }
+      }
+      function tickClock(){
+        document.getElementById('clock').textContent =
+          new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:false});
+      }
+      tickClock(); setInterval(tickClock, 20000);
+
+      function scrollDown(){ chat.scrollTop = chat.scrollHeight; }
+
+      // ================= Rendering =================
+      function addSystemChips(){
+        chat.innerHTML =
+          '<div class="sys-chip date">اليوم</div>' +
+          '<div class="sys-chip lock">🔒 الرسائل مشفرة بالكامل. اكتب أو دوس على أي رسالة جاهزة تحت وجرّب الموظف بنفسك.</div>' +
+          '<div class="sys-chip guide">أنت دلوقتي مكان العميل — والعيادة هترد عليك على طول 👇</div>';
+      }
+      function bubble(text, who, confirm){
+        var d = document.createElement('div');
+        d.className = 'msg ' + who + (confirm ? ' confirm' : '');
+        var safe = text.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+        var ticks = who === 'customer' ? '<span class="ticks" data-ticks>✓✓</span>' : '';
+        d.innerHTML = safe + '<span class="meta">' + nowTime() + ticks + '</span>';
+        chat.appendChild(d); scrollDown();
+        if (who === 'customer'){
+          var t = d.querySelector('[data-ticks]');
+          setTimeout(function(){ if(t) t.classList.add('read'); }, 700);
+        }
+        return d;
+      }
+      function setChips(list){
+        chipsBox.innerHTML = '';
+        list.forEach(function(c, i){
+          var b = document.createElement('button');
+          b.type = 'button'; b.className = 'chip' + (c.primary ? ' primary' : '');
+          b.textContent = c.label;
+          b.addEventListener('click', function(){ handleCustomer(c.value || c.label); });
+          chipsBox.appendChild(b);
+        });
+      }
+      function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+      async function agentSay(messages, confirmLast){
+        var gen = chatGen;
+        for (var i = 0; i < messages.length; i++){
+          presence.textContent = 'بيكتب…';
+          typingEl.classList.add('show'); scrollDown();
+          var wait = Math.min(650 + messages[i].length * 16, 1900);
+          await sleep(wait);
+          if (gen !== chatGen) return; // chat was reset while typing
+          typingEl.classList.remove('show');
+          presence.textContent = 'online';
+          bubble(messages[i], 'agent', confirmLast && i === messages.length - 1);
+          if (i < messages.length - 1) await sleep(320);
+          if (gen !== chatGen) return;
+        }
+      }
+
+      // ================= Summary panel =================
+      function setSum(id, val){
+        var el = document.getElementById(id);
+        el.textContent = val || '—';
+        el.classList.toggle('empty', !val);
+      }
+      function syncPanel(){
+        setSum('sumService', S.service);
+        setSum('sumVisit', S.visit ? (S.visit + (S.period ? ' — ' + S.period : '')) : null);
+        setSum('sumWhen', (S.dayLabel || S.slot) ? ((S.dayLabel || '') + (S.slot ? '، ' + S.slot : '')) : null);
+        setSum('sumName', S.name);
+        setSum('sumPhone', S.phone);
+        var pill = document.getElementById('statusPill');
+        if (S.done){ pill.textContent = 'تم التأكيد ✓'; pill.classList.add('done'); }
+        else if (S.service || S.name){ pill.textContent = 'جارٍ الحجز…'; pill.classList.remove('done'); }
+        else { pill.textContent = 'لسه مبدأش'; pill.classList.remove('done'); }
+        var idx = { service:1, visit_period:2, day:3, slot:3, slot_custom:3, name:4, phone:4, done:4 }[S.step] || 1;
+        for (var n = 1; n <= 4; n++){
+          var li = document.getElementById('step' + n);
+          li.classList.toggle('active', n === idx && !S.done);
+          li.classList.toggle('done', n < idx || S.done);
+        }
+      }
+
+      // ================= Text helpers =================
+      function norm(t){
+        return (t || '').toLowerCase()
+          .replace(/[ً-ٰٟ]/g,'')
+          .replace(/إ|أ|آ/g,'ا').replace(/ة/g,'ه').replace(/ى/g,'ي')
+          .replace(/\s+/g,' ').trim();
+      }
+      function any(t, words){ return words.some(function(w){ return t.indexOf(w) !== -1; }); }
+      function toLatinDigits(t){
+        return t.replace(/[٠-٩]/g, function(d){ return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); });
+      }
+
+      var PRICES = { check:'الكشف 300 جنيه', clean:'التنضيف والتلميع 800 جنيه', fill:'الحشو التجميلي 1,200 جنيه',
+                     ortho:'التقويم بيبدأ من 15,000 جنيه', implant:'الزراعة بتبدأ من 9,000 جنيه' };
+
+      function detectService(t){
+        if (any(t, ['الم','وجع','بيوجع','ضرسي','ضر س','سناني','toothache','pain','hurt','ache'])) return { key:'pain', label:'كشف — ألم أسنان', pain:true };
+        if (any(t, ['تنضيف','تنظيف','تلميع','جير','cleaning','clean','polish'])) return { key:'clean', label:'تنضيف وتلميع' };
+        if (any(t, ['تقويم','braces','ortho'])) return { key:'ortho', label:'تقويم أسنان' };
+        if (any(t, ['زراعه','زرع','implant'])) return { key:'implant', label:'زراعة أسنان' };
+        if (any(t, ['حشو','filling','fill'])) return { key:'fill', label:'حشو تجميلي' };
+        if (any(t, ['كشف','حجز','احجز','معاد','موعد','فحص','book','appointment','checkup','check-up','visit'])) return { key:'check', label:'كشف عام' };
+        return null;
+      }
+      function detectFAQ(t){
+        var svc = detectService(t);
+        if (any(t, ['بكام','سعر','اسعار','تكلف','تكلفه','كام','price','cost','how much','fees'])){
+          if (svc && PRICES[svc.key] && svc.key !== 'pain') return 'تمام يا فندم، حق حضرتك تعرف التكلفة من الأول: ' + PRICES[svc.key] + '. ولو احتجت أي خدمة تانية أثناء الزيارة، الدكتور هيقول لحضرتك قبل ما يبدأ.';
+          return 'تمام يا فندم، حق حضرتك تعرف التكلفة من الأول. أسعارنا: الكشف 300 جنيه، التنضيف والتلميع 800 جنيه، الحشو التجميلي 1,200 جنيه، التقويم بيبدأ من 15,000 جنيه، والزراعة بتبدأ من 9,000 جنيه.';
+        }
+        if (any(t, ['مواعيد','بتفتح','شغالين','فاتحين','hours','open','when'])) return 'مواعيدنا من السبت للخميس، من 10 الصبح لـ 10 بالليل. الجمعة إجازة.';
+        if (any(t, ['عنوان','مكان','فين','تيجي ازاي','اوصل','location','where','address'])) return 'إحنا في مدينة نصر، القاهرة — مكان سهل الوصول ليه، وبنبعت لحضرتك اللوكيشن بالتفصيل مع تأكيد الحجز.';
+        if (any(t, ['تامين','تأمين','insurance'])) return 'أيوه يا فندم، بنتعامل مع أغلب شركات التأمين. ابعتلنا صورة الكارنيه وإحنا نتأكد لحضرتك من التغطية قبل الزيارة.';
+        if (any(t, ['تبييض','هوليود','فينير','veneer','whitening'])) return '__TEAM__';
+        if (any(t, ['دكتور مين','اسم الدكتور','الدكاتره','مين الدكتور'])) return '__TEAM__';
+        if (any(t, ['دفع','كاش','فيزا','تقسيط','payment','card','installment'])) return '__TEAM__';
+        if (any(t, ['ركنه','باركينج','parking','عربيه اجي'])) return '__TEAM__';
+        return null;
+      }
+      function currentQuestion(){
+        switch(S.step){
+          case 'service': return 'حضرتك محتاج أنهي خدمة؟ كشف عام، تنضيف، حشو، تقويم، زراعة — ولا في ألم مضايق حضرتك؟';
+          case 'visit_period': 
+            if (!S.visit && !S.period) return 'دي أول زيارة لحضرتك عندنا ولا زرتنا قبل كده؟ وبتفضل المعاد صباحًا ولا مساءً؟';
+            if (!S.visit) return 'دي أول زيارة لحضرتك عندنا ولا زرتنا قبل كده؟';
+            return 'بتفضل المعاد صباحًا ولا مساءً؟';
+          case 'day': return 'أنهي يوم يناسب حضرتك؟ النهاردة، بكرة، ولا يوم تاني؟';
+          case 'slot': return 'تختار أنهي معاد فيهم؟';
+          case 'slot_custom': return 'اكتبلي الوقت اللي يناسب حضرتك وأنا أظبطه.';
+          case 'name': return 'تمام، آخر خطوة: اسم حضرتك بالكامل؟';
+          case 'phone': return 'ورقم الموبايل اللي هنتواصل عليه مع حضرتك؟';
+          default: return 'تحب نبدأ حجز جديد؟';
+        }
+      }
+      function chipsForStep(){
+        switch(S.step){
+          case 'service': return [
+            { label:'عايز أحجز كشف أسنان' },
+            { label:'عندي ألم في ضرسي من إمبارح' },
+            { label:'بكام تنضيف الأسنان؟' },
+            { label:'بتتعاملوا مع تأمين؟' }
+          ];
+          case 'visit_period': return [
+            { label:'أول مرة أزوركم، ويفضل الصبح' },
+            { label:'زارتكم قبل كده، ويفضل مساءً' },
+            { label:'أول مرة، ويفضل مساءً' }
+          ];
+          case 'day': return [
+            { label:'النهاردة' }, { label:'بكرة' }, { label:'بعد بكرة' }, { label:'يوم الخميس' }
+          ];
+          case 'slot': {
+            var arr = S.slots.map(function(s){ return { label: s, primary:true }; });
+            arr.push({ label:'وقت تاني يناسبني' });
+            return arr;
+          }
+          case 'slot_custom': return [ { label:'الساعة 3 العصر' }, { label:'الساعة 8 بالليل' } ];
+          case 'name': return [ { label:'اسمي أحمد سامي حسن' } ];
+          case 'phone': return [ { label:'01012345678' } ];
+          case 'done': return [ { label:'شكرًا، تمام كده' }, { label:'محادثة جديدة', value:'__RESET__' } ];
+          default: return [];
+        }
+      }
+
+      // ================= Day / slots =================
+      var WEEKDAYS = { 'الاحد':0,'الأحد':0,'الاتنين':1,'الاثنين':1,'الإثنين':1,'التلات':2,'الثلاثاء':2,'الاربع':3,'الاربعاء':3,'الأربعاء':3,'الخميس':4,'الجمعه':5,'الجمعة':5,'السبت':6 };
+      function fmtDay(d){
+        try { return d.toLocaleDateString('ar-EG',{ weekday:'long', day:'numeric', month:'long' }); }
+        catch(e){ return d.toDateString(); }
+      }
+      function resolveDay(t){
+        var today = new Date(); today.setHours(0,0,0,0);
+        var d = null, rel = null;
+        if (any(t, ['بعد بكره','بعد بكرة'])) { d = new Date(today); d.setDate(d.getDate()+2); rel = 'بعد بكرة'; }
+        else if (any(t, ['بكره','بكرة','tomorrow'])) { d = new Date(today); d.setDate(d.getDate()+1); rel = 'بكرة'; }
+        else if (any(t, ['النهارده','النهاردة','اليوم','today'])) { d = new Date(today); rel = 'النهاردة'; }
+        else {
+          var keys = Object.keys(WEEKDAYS);
+          for (var i = 0; i < keys.length; i++){
+            if (t.indexOf(norm(keys[i])) !== -1){
+              d = new Date(today);
+              var diff = (WEEKDAYS[keys[i]] - today.getDay() + 7) % 7;
+              d.setDate(d.getDate() + diff);
+              rel = null; break;
+            }
+          }
+        }
+        if (!d) return null;
+        return { date:d, label:(rel ? rel + ' ' : '') + '(' + fmtDay(d) + ')' };
+      }
+      function offerSlots(){
+        S.slots = (S.period === 'صباحًا')
+          ? ['10:30 صباحًا', '12:00 ظهرًا']
+          : ['5:30 مساءً', '7:00 مساءً'];
+      }
+      function matchSlot(t){
+        for (var i = 0; i < S.slots.length; i++){
+          var s = S.slots[i];
+          var num = s.split(' ')[0];
+          if (t.indexOf(num) !== -1 || toLatinDigits(t).indexOf(num) !== -1) return s;
+        }
+        if (any(t, ['الاول','الأول','اول واحد','first'])) return S.slots[0];
+        if (any(t, ['التاني','الثاني','تاني واحد','second'])) return S.slots[1];
+        return null;
+      }
+      function validatePhone(raw){
+        var d = toLatinDigits(raw).replace(/[^\d]/g,'');
+        if (d.indexOf('0020') === 0) d = d.slice(2);
+        if (/^01\d{9}$/.test(d)) return d;
+        if (/^20(1\d{9})$/.test(d)) return '0' + d.slice(2);
+        if (/^(966|971|965|974|973|968)\d{8,9}$/.test(d)) return '+' + d;
+        if (/^5\d{8}$/.test(d)) return d; // Gulf local format
+        return null;
+      }
+
+      // ================= Greetings: always returned in kind =================
+      function detectGreeting(t){
+        if (t.indexOf('سلام عليكم') !== -1 || t.indexOf('عليكم السلام') !== -1) return 'salam';
+        if (t.indexOf('مساء الفل') !== -1) return 'masa_fl';
+        if (t.indexOf('مساء الورد') !== -1) return 'masa_ward';
+        if (t.indexOf('مساء العسل') !== -1) return 'masa_asal';
+        if (t.indexOf('مساء الخير') !== -1 || t.indexOf('مساء النور') !== -1) return 'masa';
+        if (t.indexOf('صباح الخير') !== -1 || t.indexOf('صباح النور') !== -1 || t.indexOf('صباح الفل') !== -1 || t.indexOf('صباح الورد') !== -1) return 'sabah';
+        if (any(t, ['اهلا','مرحب','هلا','hello','هاي'])) return 'ahlan';
+        return null;
+      }
+      function greetingLine(key){
+        switch(key){
+          case 'salam': return 'وعليكم السلام ورحمة الله وبركاته، أهلًا وسهلًا بحضرتك في عيادات سمايل لطب الأسنان، نورتنا يا فندم.';
+          case 'sabah': return 'صباح النور والسرور، أهلًا بحضرتك في عيادات سمايل لطب الأسنان، نورتنا يا فندم.';
+          case 'masa': return 'مساء النور والسرور، أهلًا بحضرتك في عيادات سمايل لطب الأسنان، نورتنا يا فندم.';
+          case 'masa_fl': return 'مساء الفل والياسمين، أهلًا بحضرتك في عيادات سمايل لطب الأسنان، نورتنا يا فندم.';
+          case 'masa_ward': return 'مساء الورد والياسمين، أهلًا بحضرتك في عيادات سمايل لطب الأسنان، نورتنا يا فندم.';
+          case 'masa_asal': return 'مساء العسل، أهلًا بحضرتك في عيادات سمايل لطب الأسنان، نورتنا يا فندم.';
+          default: return 'أهلًا وسهلًا بحضرتك في عيادات سمايل لطب الأسنان، نورتنا يا فندم.';
+        }
+      }
+
+      // ================= Smart reply layer =================
+      // The booking state machine above decides WHAT must happen next and
+      // drafts the reply. An open-weight model (GPT-OSS via the free,
+      // no-key Pollinations API) only rephrases that draft in natural
+      // Masri. Any failure, timeout or failed fact-check falls back to
+      // the scripted draft — booking state never depends on the model.
+      var conversation = [];
+      var currentUserText = '';
+      var MODEL_NAME = 'openai-fast';
+      function setBrain(mode){
+        var el = document.getElementById('brainState');
+        var badge = document.getElementById('brainBadge');
+        if (!el || !badge) return;
+        if (mode === 'smart'){ el.textContent = 'الرد الذكي'; badge.classList.add('smart'); }
+        else if (mode === 'scripted'){ el.textContent = 'الرد الجاهز'; badge.classList.remove('smart'); }
+        else { el.textContent = 'لسه مفيش رد'; badge.classList.remove('smart'); }
+      }
+      function fetchWithTimeout(url, opts, ms){
+        var ctrl = new AbortController();
+        var timer = setTimeout(function(){ ctrl.abort(); }, ms);
+        var o = {}; for (var k in opts) o[k] = opts[k];
+        o.signal = ctrl.signal;
+        return fetch(url, o).then(function(r){ clearTimeout(timer); return r; },
+                                  function(e){ clearTimeout(timer); throw e; });
+      }
+      async function fetchModelText(messages){
+        try {
+          var res = await fetchWithTimeout('https://text.pollinations.ai/openai',
+            { method:'POST', headers:{ 'Content-Type':'application/json' },
+              body: JSON.stringify({ model: MODEL_NAME, messages: messages }) }, 8000);
+          if (res && res.ok){
+            var j = await res.json();
+            var c = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+            if (c && c.trim()) return c;
+          }
+        } catch(e){}
+        // No GET fallback on purpose: message content must only ever
+        // travel inside a POST body, never encoded in a URL.
+        return null;
+      }
+      function mustKeepTokens(draftText){
+        var src = toLatinDigits(draftText).replace(/,/g,'');
+        var tokens = [];
+        var re = /(\d+(?::\d+)?)\s*(جنيه|صباح|مساء)/g, mm;
+        while ((mm = re.exec(src))){ if (tokens.indexOf(mm[1]) === -1) tokens.push(mm[1]); }
+        return tokens;
+      }
+      async function composeSmart(draft){
+        var draftText = draft.join('\n');
+        var hist = conversation.slice(-8).map(function(h){
+          // Phone-number-shaped values never go to the model.
+          var safe = toLatinDigits(h.text).replace(/\d[\d\s-]{5,}\d/g, '[رقم]');
+          return (h.who === 'customer' ? 'العميل: ' : 'الموظف: ') + safe;
+        }).join('\n');
+        var system = [
+          'انت موظف حجز واستقبال في «عيادات سمايل لطب الأسنان» في مدينة نصر، القاهرة، بترد على عملاء WhatsApp.',
+          'بيانات العيادة (المصدر الوحيد للحقائق، ممنوع تخترع غيرها): الخدمات والأسعار: كشف 300 جنيه، تنضيف وتلميع 800 جنيه، حشو تجميلي 1,200 جنيه، تقويم بيبدأ من 15,000 جنيه، زراعة بتبدأ من 9,000 جنيه. المواعيد: السبت للخميس من 10 صباحًا لـ 10 مساءً والجمعة إجازة. بنتعامل مع أغلب شركات التأمين. العنوان: مدينة نصر، القاهرة.',
+          'قواعد الرد:',
+          '- اتكلم مصري (Masri) طبيعي ودافي، وخاطب العميل بـ «حضرتك» و«يا فندم».',
+          '- رد التحية بمثلها دايمًا: السلام عليكم ← «وعليكم السلام ورحمة الله وبركاته»، مساء الخير ← «مساء النور»، صباح الخير ← «صباح النور»، ومساء الفل أو الورد أو العسل ← رد دافي من نفس النوع. ممنوع تمامًا ترد على أي تحية بـ «تمام يا فندم» بس.',
+          '- لو العميل بيشتكي من ألم أو مشكلة، ابدأ بتعاطف حقيقي قبل أي سؤال.',
+          '- مهمتك: أعد صياغة «مسودة الرد» اللي هتوصلك بأسلوب إنساني طبيعي كأن بني آدم بيكتب على WhatsApp، من غير ما تغيّر أي معلومة أو سعر أو معاد أو اسم فيها، وحافظ على السؤال أو العرض اللي في آخر المسودة زي ما هو في المعنى والأرقام بالظبط.',
+          '- الرد قصير: سطر لتلاتة بالكتير، من غير قوائم طويلة ومن غير ما تعيد سرد كل الخدمات والأسعار.',
+          '- اكتب الرد نفسه بس، من غير شرح ولا تنسيق ولا علامات اقتباس حوالين الرد.',
+          'المحادثة لحد دلوقتي:',
+          hist
+        ].join('\n');
+        var safeUser = toLatinDigits(currentUserText).replace(/\d[\d\s-]{5,}\d/g, '[رقم]');
+        var messages = [
+          { role:'system', content: system },
+          { role:'user', content: 'رسالة العميل الأخيرة: ' + safeUser + '\n\nمسودة الرد المطلوب توصيلها:\n' + draftText }
+        ];
+        var raw = await fetchModelText(messages);
+        if (!raw) return null;
+        var clean = raw.replace(/```[\s\S]*?```/g,'').replace(/^["«]|["»]$/g,'').trim();
+        var lines = clean.split(/\n+/).map(function(s){ return s.trim(); }).filter(Boolean).slice(0, 3);
+        if (!lines.length) return null;
+        var joined = lines.join('\n');
+        if (joined.length < 8 || joined.length > 700) return null;
+        if (/http|{|}|<|>/.test(joined)) return null;
+        var normModel = toLatinDigits(joined).replace(/,/g,'');
+        var tokens = mustKeepTokens(draftText);
+        for (var i = 0; i < tokens.length; i++){
+          if (normModel.indexOf(tokens[i]) === -1) return null; // a price/time changed or vanished
+        }
+        var lastDraft = draft[draft.length - 1];
+        if ((lastDraft.indexOf('؟') !== -1 || lastDraft.indexOf('?') !== -1) &&
+            joined.indexOf('؟') === -1 && joined.indexOf('?') === -1){
+          lines.push(lastDraft); // never lose the booking question
+        }
+        return lines;
+      }
+      async function deliver(replies, confirm, smartAllowed){
+        var finalReplies = replies, mode = 'scripted';
+        if (smartAllowed && !confirm){
+          try {
+            var smart = await composeSmart(replies);
+            if (smart){ finalReplies = smart; mode = 'smart'; }
+          } catch(e){}
+        }
+        setBrain(mode);
+        conversation.push({ who:'agent', text: finalReplies.join('\n') });
+        if (conversation.length > 14) conversation.splice(0, conversation.length - 14);
+        await agentSay(finalReplies, confirm);
+      }
+
+      // ================= Main brain =================
+      var busy = false;
+      var msgQueue = [];
+      function handleCustomer(raw){
+        var text = (raw || '').trim();
+        if (!text) return;
+        if (text === '__RESET__'){ msgQueue.length = 0; resetChat(); return; }
+        // The customer's bubble appears the moment they hit send — even
+        // while the agent is still typing. The message is queued and the
+        // agent answers in order, so typed text is never swallowed.
+        bubble(text, 'customer');
+        msgQueue.push(text);
+        pumpQueue();
+      }
+      async function pumpQueue(){
+        if (busy) return;
+        var text = msgQueue.shift();
+        if (text === undefined) return;
+        busy = true;
+        try { await processMessage(text); }
+        catch(e){ /* one bad message must never lock the demo */ }
+        busy = false;
+        pumpQueue();
+      }
+      async function processMessage(text){
+        var t = norm(text);
+        var replies = [];
+        var confirm = false;
+        var allowSmart = true;
+        var greetKey = detectGreeting(t);
+        var stepAtStart = S.step;
+        currentUserText = text;
+        // Name and phone turns are stored as a placeholder, never raw —
+        // they have no role in rephrasing replies and never reach the model.
+        conversation.push({ who:'customer', text: (S.step === 'name' || S.step === 'phone') ? '[بيانات تواصل]' : text });
+        if (conversation.length > 14) conversation.splice(0, conversation.length - 14);
+
+        // --- After booking is done ---
+        if (S.step === 'done'){
+          if (any(t, ['محادثه جديده','من الاول','reset'])){ resetChat(); return; }
+          replies = ['العفو يا فندم، إحنا في خدمة حضرتك دايمًا. لو احتجت تعدّل المعاد أو تحجز لأي حد من الأسرة، ابعتلنا هنا على طول. يومك سعيد!'];
+          await deliver(replies, false, true); return;
+        }
+
+        // --- FAQ first (answers, then returns to the flow) — except while capturing name/phone ---
+        var faq = (S.step !== 'name' && S.step !== 'phone') ? detectFAQ(t) : null;
+        if (faq){
+          if (faq === '__TEAM__'){
+            replies = ['سؤال مهم يا فندم، وده بالذات هبعتّه لفريق العيادة وهما هيكلموا حضرتك يوضحوا كل التفاصيل.',
+                       'ونكمّل حجزنا على ما يردوا — ' + currentQuestion()];
+          } else {
+            replies = [faq, 'ونرجع لحجزنا — ' + currentQuestion()];
+          }
+          if (greetKey) replies.unshift(greetingLine(greetKey));
+          setChips(chipsForStep());
+          await deliver(replies, false, true); return;
+        }
+
+        // --- A greeting is always returned in kind, at any step — but a
+        // greeting bundled with a real answer must not swallow the answer:
+        // the greeting-only branch runs only when nothing substantive for
+        // the current step remains after stripping the greeting itself.
+        if (greetKey && S.step !== 'name' && S.step !== 'phone' && !detectService(t)){
+          var rest = t.replace(/مساء الخير|مساء النور|مساء الفل|مساء الورد|مساء العسل|صباح الخير|صباح النور|صباح الفل|صباح الورد|سلام عليكم|عليكم السلام|اهلا وسهلا|اهلا|مرحبا|هلا/g,'').replace(/^[،,\s]+|[،,\s]+$/g,'');
+          var restSubstance = rest && (detectService(rest) || resolveDay(rest) ||
+            any(rest, ['اول مره','اول زياره','قبل كده','زارت','زرت','صباحا','الصبح','مسا','بالليل','ليلا','بعد الضهر']) ||
+            (S.step === 'slot' && matchSlot(rest)) || /\d/.test(toLatinDigits(rest)));
+          if (!restSubstance && text.trim().length <= 40){
+            replies = [greetingLine(greetKey), currentQuestion()];
+            setChips(chipsForStep());
+            await deliver(replies, false, true); return;
+          }
+        }
+
+        switch(S.step){
+
+          case 'service': {
+            var svc = detectService(t);
+            if (svc){
+              S.service = svc.label; S.serviceKey = svc.key; S.pain = !!svc.pain;
+              S.step = 'visit_period'; syncPanel();
+              if (svc.pain){
+                replies = ['ألف سلامة على حضرتك يا فندم، ألم الضرس فعلًا مزعج ومبيستناش — هنرتّب لحضرتك أقرب معاد للكشف والتشخيص.',
+                           'قبل ما أشوف لحضرتك المواعيد: دي أول زيارة لحضرتك عندنا ولا زرتنا قبل كده؟ وبتفضل المعاد صباحًا ولا مساءً؟'];
+              } else if (svc.key === 'clean'){
+                replies = ['تمام يا فندم، التنضيف والتلميع بيفرق جدًا في شكل وصحة الأسنان — اختيار موفق.',
+                           'دي أول زيارة لحضرتك عندنا ولا زرتنا قبل كده؟ وبتفضل المعاد صباحًا ولا مساءً؟'];
+              } else {
+                replies = ['تمام يا فندم، يسعدنا نساعد حضرتك في ' + svc.label + ' — هنرتّبها خطوة بخطوة.',
+                           'دي أول زيارة لحضرتك عندنا ولا زرتنا قبل كده؟ وبتفضل المعاد صباحًا ولا مساءً؟'];
+              }
+            } else if (any(t, ['خايف','قلقان','بخاف','scared','afraid'])){
+              S.service = 'كشف عام'; S.serviceKey = 'check'; S.step = 'visit_period'; syncPanel();
+              replies = ['حق حضرتك تقلق يا فندم، وناس كتير بيحسوا كده قبل أول زيارة — الدكتور بيشرح كل خطوة قبل ما يبدأ، ومفيش أي إجراء من غير ما تكون مرتاح.',
+                         'خلينا نبدأ بكشف بسيط. دي أول زيارة لحضرتك عندنا؟ وبتفضل المعاد صباحًا ولا مساءً؟'];
+            } else if (greetKey) {
+              replies = [greetingLine(greetKey), 'أقدر أساعد حضرتك تحجز معاد. محتاج أنهي خدمة؟ كشف عام، تنضيف، حشو، تقويم، زراعة — ولا في ألم مضايق حضرتك؟'];
+            } else {
+              replies = ['تمام يا فندم، أنا مع حضرتك. عشان أرتّب الحجز صح، قولي بس: محتاج كشف عام، تنضيف وتلميع، حشو، تقويم، زراعة — ولا في ألم معين مضايق حضرتك؟'];
+            }
+            break;
+          }
+
+          case 'visit_period': {
+            if (any(t, ['اول مره','أول مره','اول زياره','جديد','first time','first visit','new patient'])) S.visit = 'أول زيارة';
+            if (any(t, ['قبل كده','زارت','زرت','جيت','كنت عندكم','عميل','before','returning','visited'])) S.visit = 'زارنا قبل كده';
+            if (any(t, ['صباح','الصبح','صباحا','morning'])) S.period = 'صباحًا';
+            if (any(t, ['مسا','بالليل','ليلا','ليل','بعد الضهر','evening','night','afternoon'])) S.period = 'مساءً';
+            syncPanel();
+            if (S.visit && S.period){
+              S.step = 'day';
+              replies = [(S.visit === 'أول زيارة'
+                          ? 'تمام يا فندم، أهلًا بيك معانا لأول مرة — وهنخلي أول زيارة سهلة ومريحة.'
+                          : 'تمام يا فندم، أهلًا بحضرتك من تاني — نورتنا.') +
+                         ' وحضرتك تفضل ' + S.period + '، تمام كده.',
+                         'أنهي يوم يناسب حضرتك؟ النهاردة، بكرة، ولا يوم تاني؟'];
+            } else if (S.visit && !S.period){
+              replies = ['تمام يا فندم، سجّلت إنها ' + S.visit + '. وبتفضل المعاد صباحًا ولا مساءً؟'];
+            } else if (!S.visit && S.period){
+              replies = ['تمام، يبقى المعاد ' + S.period + '. ودي أول زيارة لحضرتك عندنا ولا زرتنا قبل كده؟'];
+            } else {
+              replies = ['تمام يا فندم، معلش هسأل حضرتك سؤالين صغيرين عشان أظبط المعاد: دي أول زيارة عندنا ولا زرتنا قبل كده؟ وبتفضل صباحًا ولا مساءً؟'];
+            }
+            break;
+          }
+
+          case 'day': {
+            var rd = resolveDay(t);
+            if (!rd){
+              replies = ['تمام يا فندم، قولي بس أنهي يوم يناسب حضرتك — النهاردة، بكرة، بعد بكرة، ولا يوم معين في الأسبوع؟'];
+            } else if (rd.date.getDay() === 5){
+              replies = ['حق حضرتك يا فندم، بس الجمعة العيادة إجازة. تحب نختار السبت ولا يوم تاني يناسب حضرتك؟'];
+            } else {
+              S.dayLabel = rd.label; S.dayDate = rd.date;
+              offerSlots(); S.step = 'slot'; syncPanel();
+              replies = ['تمام يا فندم، ' + S.dayLabel + ' ' + S.period + ' عندنا معادين فاضيين:',
+                         '١) ' + S.slots[0] + '\n٢) ' + S.slots[1] + '\nتختار أنهي واحد فيهم؟ ولو ولا واحد مناسب، قولي الوقت اللي يناسب حضرتك.'];
+            }
+            break;
+          }
+
+          case 'slot': {
+            var chosen = matchSlot(t);
+            if (chosen){
+              S.slot = chosen; S.step = 'name'; syncPanel();
+              replies = ['اختيار ممتاز يا فندم — ' + S.dayLabel + ' الساعة ' + S.slot + '. سجّلته لحضرتك مؤقتًا.',
+                         'آخر خطوتين صغيرين ونخلّص: اسم حضرتك بالكامل إيه؟'];
+            } else if (any(t, ['وقت تاني','غيرهم','مش مناسب','تاني','other','another'])){
+              S.step = 'slot_custom';
+              replies = ['ولا يهم حضرتك خالص، المواعيد مرنة. اكتبلي الوقت اللي يناسبك في نفس اليوم وأنا أظبطه لحضرتك.'];
+            } else {
+              replies = ['تمام يا فندم، تختار ' + S.slots[0] + ' ولا ' + S.slots[1] + '؟ ولو عايز وقت تاني قولي.'];
+            }
+            break;
+          }
+
+          case 'slot_custom': {
+            var cleaned = text.replace(/الساعه|الساعة/g,'').trim();
+            S.slot = 'الساعة ' + cleaned; S.step = 'name'; syncPanel();
+            replies = ['تمام يا فندم، سجّلت طلب حضرتك: ' + S.dayLabel + ' ' + S.slot + ' — وهنأكده مع جدول الدكتور في مكالمة التأكيد.',
+                       'آخر خطوتين ونخلّص: اسم حضرتك بالكامل إيه؟'];
+            break;
+          }
+
+          case 'name': { allowSmart = false;
+            var nm = text.replace(/اسمي هو|اسمي|انا اسمي|أنا/g,'').trim();
+            if (nm.length < 3){
+              replies = ['تمام يا فندم، اكتبلي بس الاسم بالكامل عشان يبقى الحجز باسم حضرتك صح.'];
+            } else {
+              S.name = nm; S.step = 'phone'; syncPanel();
+              replies = ['أهلًا بيك يا أستاذ ' + nm.split(' ')[0] + '، نورتنا.',
+                         'آخر حاجة: رقم الموبايل اللي هنتواصل عليه مع حضرتك للتأكيد والتذكير بالمعاد؟'];
+            }
+            break;
+          }
+
+          case 'phone': { allowSmart = false;
+            var ph = validatePhone(text);
+            if (!ph){
+              replies = ['شكرًا يا فندم. الرقم ده شكله ناقص أو مش مظبوط — اكتبهولي كامل من فضلك، 11 رقم لموبايل مصري (بيبدأ بـ 01) أو برقم الدولة لو الرقم خليجي.'];
+            } else {
+              S.phone = ph; S.step = 'done'; S.done = true; syncPanel(); confirm = true;
+              var summary = '✅ تم تأكيد الحجز\n' +
+                'الاسم: ' + S.name + '\n' +
+                'الخدمة: ' + S.service + '\n' +
+                'اليوم: ' + S.dayLabel + '\n' +
+                'الساعة: ' + S.slot + '\n' +
+                'العنوان: مدينة نصر، القاهرة';
+              replies = [summary,
+                         'هنبعت لحضرتك تذكير قبل المعاد، وفريق العيادة هيكلم حضرتك على ' + S.phone + ' لتأكيد الحجز. لو حصل أي تغيير، ابعتلنا هنا في أي وقت. ألف سلامة ونورتنا يا فندم!'];
+            }
+            break;
+          }
+        }
+
+        // A greeting bundled with a real answer: return the greeting
+        // first, then the step's normal reply (never lose the answer).
+        if (greetKey && stepAtStart !== 'name' && stepAtStart !== 'phone' && replies.length && replies[0] !== greetingLine(greetKey)){
+          replies.unshift(greetingLine(greetKey));
+        }
+        setChips(chipsForStep());
+        syncPanel();
+        await deliver(replies, confirm, allowSmart);
+      }
+
+      // ================= Input / reset =================
+      function toggleSendIcon(){
+        var has = input.value.trim().length > 0;
+        sendIcon.style.display = has ? '' : 'none';
+        micIcon.style.display = has ? 'none' : '';
+      }
+      input.addEventListener('input', toggleSendIcon);
+      function sendTyped(){
+        var text = input.value;
+        if (!text.trim()) return;
+        input.value = ''; toggleSendIcon();
+        handleCustomer(text);
+        input.focus();
+      }
+      // Send is wired three ways on purpose: the button's own click and the
+      // Enter key call sendTyped() directly, so sending never depends on the
+      // form submit event alone (some embedded webviews block form submits).
+      // Duplicates are harmless — the first call clears the input, so any
+      // second call sees it empty and does nothing.
+      document.getElementById('sendBtn').addEventListener('click', function(e){ e.preventDefault(); sendTyped(); });
+      form.addEventListener('submit', function(e){ e.preventDefault(); sendTyped(); });
+      input.addEventListener('keydown', function(e){
+        if (e.key === 'Enter'){ e.preventDefault(); sendTyped(); }
+      });
+      function resetChat(){
+        chatGen++;
+        msgQueue.length = 0;
+        typingEl.classList.remove('show');
+        presence.textContent = 'online';
+        S = freshState();
+        conversation = [];
+        currentUserText = '';
+        setBrain(null);
+        addSystemChips();
+        setChips(chipsForStep());
+        syncPanel();
+        input.value = ''; toggleSendIcon();
+        input.focus();
+      }
+      document.getElementById('resetBtnPanel').addEventListener('click', resetChat);
+      document.getElementById('resetBtnPhone').addEventListener('click', resetChat);
+
+      addSystemChips();
+      setChips(chipsForStep());
+      syncPanel();
+      toggleSendIcon();
+    </script>
+  </body>
+</html>
